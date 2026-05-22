@@ -1,4 +1,3 @@
-# detection/detector.py
 from ultralytics import YOLO
 import cv2
 
@@ -24,7 +23,7 @@ def detect(frame):
 
 
 if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)  # 웹캠
+    cap = cv2.VideoCapture(0)
 
     while True:
         ret, frame = cap.read()
@@ -38,21 +37,18 @@ if __name__ == "__main__":
             label = d["class"]
             conf = d["confidence"]
 
-            if label == "two_people":
-                color = (0, 0, 255)   # 빨간색
-                text = f"2인 탑승! {conf:.0%}"
-            elif label == "one_people":
-                color = (0, 255, 0)   # 초록색
-                text = f"정상 {conf:.0%}"
-            else:
-                color = (255, 200, 0) # 노란색
-                text = f"킥보드 {conf:.0%}"
+            if label == "person":
+                color = (0, 255, 0)
+            elif label == "helmet":
+                color = (255, 200, 0)
+            else:  # kickboard
+                color = (255, 100, 0)
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-            cv2.putText(frame, text, (x1, y1-10),
+            cv2.putText(frame, f"{label} {conf:.0%}", (x1, y1-10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
-        cv2.imshow("킥보드 2인 탑승 감지", frame)
+        cv2.imshow("킥보드 단속 감지", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
