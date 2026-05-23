@@ -4,7 +4,7 @@ import cv2
 model = YOLO("model/weights/best.pt")
 
 def detect(frame):
-    results = model(frame)
+    results = model(frame, conf=0.25, verbose=False)  # verbose=False 추가로 터미널 출력 없앰
     detections = []
 
     for box in results[0].boxes:
@@ -20,7 +20,6 @@ def detect(frame):
         })
 
     return detections
-
 
 if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
@@ -41,7 +40,7 @@ if __name__ == "__main__":
                 color = (0, 255, 0)
             elif label == "helmet":
                 color = (255, 200, 0)
-            else:  # kickboard
+            else:
                 color = (255, 100, 0)
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
