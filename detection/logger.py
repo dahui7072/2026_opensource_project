@@ -2,7 +2,7 @@ import csv
 import os
 from datetime import datetime
 
-LOG_PATH = "../data/violations.csv"
+LOG_PATH = os.path.join(os.path.dirname(__file__), "../data/violations.csv")
 
 def init_logger():
     """CSV 파일 없으면 헤더 포함해서 새로 생성"""
