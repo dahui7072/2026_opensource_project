@@ -1,3 +1,4 @@
+/* 기본 배경 및 테마 세팅 (하이테크 다크 모드 관제 센터 스타일) */
 * {
     margin: 0;
     padding: 0;
@@ -5,52 +6,207 @@
 }
 
 body {
-    font-family: 'Apple SD Gothic Neo', sans-serif;
-    background-color: #1a1a2e;
-    color: #eee;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background-color: #0b0f19;
+    color: #e2e8f0;
     padding: 20px;
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 1.8rem;
-    color: #e94560;
-}
-
-h2 {
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-    color: #aaa;
-}
-
-.container {
+/* 헤더 스타일 */
+.main-header {
     display: flex;
-    gap: 30px;
-    justify-content: center;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #1e293b;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
 }
 
-.video-section {
-    background: #16213e;
-    padding: 20px;
+.main-header h1 {
+    font-size: 1.7rem;
+    color: #38bdf8;
+}
+
+.system-status {
+    background-color: #1e293b;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #10b981;
+}
+
+/* 대시보드 레이아웃 구조 디자인 */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.top-section {
+    display: flex;
+    gap: 25px;
+}
+
+.bottom-section {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1.5fr;
+    gap: 25px;
+}
+
+/* 공통 카드 및 디자인 박스 */
+.card {
+    background: #141b2d;
+    border: 1px solid #1f293d;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.video-section img {
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-left: 4px solid #38bdf8;
+    padding-left: 10px;
+}
+
+.card-header h2 {
+    font-size: 1.1rem;
+    color: #94a3b8;
+}
+
+.live-badge {
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 0.85rem;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+/* 비디오 피드 영역 */
+.video-card {
+    flex: 2;
+}
+
+.video-wrapper {
+    width: 100%;
+    background: #000;
     border-radius: 8px;
-    display: block;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.chart-section {
-    background: #16213e;
-    padding: 20px;
+.video-wrapper img {
+    width: 100%;
+    max-height: 440px;
+    object-fit: contain;
+}
+
+/* 우측 상단 KPI 스탯 판넬 */
+.stats-panel {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.kpi-card {
+    background: #1f293d;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    width: 400px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 5px solid #64748b;
 }
 
-canvas {
-    max-width: 100%;
+.kpi-card h3 {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin-bottom: 10px;
+}
+
+.kpi-card p {
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+/* 통계 유형별 테마 칼라 포인트 */
+.kpi-card.total { border-left-color: #38bdf8; }
+.kpi-card.total p { color: #38bdf8; }
+.kpi-card.helmet { border-left-color: #ef4444; }
+.kpi-card.helmet p { color: #ef4444; }
+.kpi-card.two-person { border-left-color: #f59e0b; }
+.kpi-card.two-person p { color: #f59e0b; }
+.kpi-card.accuracy { border-left-color: #10b981; }
+.kpi-card.accuracy p { color: #10b981; }
+
+/* 하단 차트 및 로그 테이블 크기 지정 */
+.chart-wrapper {
+    position: relative;
+    height: 250px;
+    width: 100%;
+}
+
+.pie-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 테이블 디자인 */
+.log-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.table-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 250px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    background-color: #1f293d;
+    color: #94a3b8;
+    padding: 10px;
+    font-size: 0.9rem;
+    position: sticky;
+    top: 0;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #1e293b;
+    font-size: 0.9rem;
+}
+
+tr:hover {
+    background-color: #1e293b;
 }

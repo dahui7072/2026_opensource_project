@@ -2,24 +2,81 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>킥보드 단속 시스템</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 스마트 킥보드 위반 관제 대시보드</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>🛴 AI 기반 킥보드 안전 수칙 위반 단속 시스템</h1>
+    <header class="main-header">
+        <h1>🛴 AI 스마트 모빌리티 위반 관제 시스템</h1>
+        <div class="system-status">
+            <span class="status-indicator"></span> SYSTEM ONLINE
+        </div>
+    </header>
 
-    <div class="container">
-        <!-- 실시간 웹캠 -->
-        <div class="video-section">
-            <h2>실시간 감지</h2>
-            <img src="/video_feed" width="640" height="480">
+    <div class="dashboard-container">
+        <div class="top-section">
+            <div class="card video-card">
+                <div class="card-header">
+                    <h2>실시간 감지 피드</h2>
+                    <span class="live-badge">● LIVE</span>
+                </div>
+                <div class="video-wrapper">
+                    <img src="/video_feed" alt="CCTV Stream">
+                </div>
+            </div>
+
+            <div class="stats-panel">
+                <div class="kpi-card total">
+                    <h3>오늘 총 위반 건수</h3>
+                    <p id="statTotalCount">0</p>
+                </div>
+                <div class="kpi-card helmet">
+                    <h3>헬멧 미착용 수</h3>
+                    <p id="statHelmetCount">0</p>
+                </div>
+                <div class="kpi-card two-person">
+                    <h3>2인 탑승 수</h3>
+                    <p id="statTwoPersonCount">0</p>
+                </div>
+                <div class="kpi-card accuracy">
+                    <h3>AI 감지 정확도</h3>
+                    <p>91.2%</p>
+                </div>
+            </div>
         </div>
 
-        <!-- 통계 -->
-        <div class="chart-section">
-            <h2>위반 통계</h2>
-            <canvas id="violationChart"></canvas>
+        <div class="bottom-section">
+            <div class="card chart-card">
+                <div class="card-header"><h2>시간대별 위반 건수</h2></div>
+                <div class="chart-wrapper">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card chart-card">
+                <div class="card-header"><h2>위반 유형 비율</h2></div>
+                <div class="chart-wrapper pie-wrapper">
+                    <canvas id="ratioChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card log-card">
+                <div class="card-header"><h2>누적 위반 기록 (실시간 CSV)</h2></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>단속 시간</th>
+                                <th>위반 유형</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
