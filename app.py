@@ -81,7 +81,7 @@ def data():
     violations = []
     try:
         with open("data/violations.csv", "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(f, fieldnames=['timestamp', 'violation_type'])
             for row in reader:
                 violations.append(row)
     except FileNotFoundError:
