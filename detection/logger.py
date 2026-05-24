@@ -8,11 +8,11 @@ LOG_PATH = os.path.join(
     "../data/violations.csv"
 )
 
-# 마지막 저장 시간
-last_log_time = 0
+# 현재 위반 상태
+current_violation = None
 
-# 같은 위반 저장 제한 시간(초)
-COOLDOWN = 5
+# 마지막 저장 시간
+last_saved_time = 0
 
 
 def init_logger():
@@ -41,12 +41,16 @@ def init_logger():
 
 def log_violation(violation_type: str):
 
-    global last_log_time
+    global current_violation
+    global last_saved_time
 
     current_time = time.time()
 
-    # 마지막 저장 후 5초 안이면 저장 안 함
-    if current_time - last_log_time < COOLDOWN:
+    # 같은 위반 상태 + 3초 이내면 저장 안 함
+    if (
+        current_violation == violation_type
+        and current_time - last_saved_time < 3
+    ):
         return
 
     timestamp = datetime.now().strftime(
@@ -67,5 +71,12 @@ def log_violation(violation_type: str):
             violation_type
         ])
 
-    # 마지막 저장 시간 갱신
-    last_log_time = current_time
+    current_violation = violation_type
+    last_saved_time = current_time
+
+
+def reset_violation():
+
+    global current_violation
+
+    current_violation = None

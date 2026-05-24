@@ -12,7 +12,8 @@ from detection.violation import check_violation
 
 from detection.logger import (
     init_logger,
-    log_violation
+    log_violation,
+    reset_violation
 )
 
 app = Flask(
@@ -57,6 +58,9 @@ def generate_frames():
         # 3. 로그 저장
         if result != "normal":
             log_violation(result)
+
+        else:
+            reset_violation()
 
         # 4. 경고 문구 표시
         if result == "two_person":
