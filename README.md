@@ -1,5 +1,3 @@
-# 2026_opensource_project
-
 # 🛴 AI 스마트 모빌리티 위반 관제 시스템
 
 > YOLOv8 기반 전동 킥보드 안전 수칙 위반 실시간 감지 및 통계 대시보드
@@ -31,23 +29,35 @@
 ## 📁 디렉터리 구조
 
 ```
-kickboard-safety-ai/
-├── app.py                  # Flask 서버 (메인 실행 파일)
-├── requirements.txt        # 의존성 패키지 목록
+2026_OPENSOURCE_PROJECT/
+├── app.py                      # Flask 서버 (메인 실행 파일)
+├── README.md
+├── .gitignore
+├── yolov8 dataset.ipynb        # 데이터셋 구성 노트북
 ├── data/
-│   └── violations.csv      # 위반 기록 누적 저장
+│   └── violations.csv          # 위반 기록 누적 저장
 ├── detection/
-│   ├── detector.py         # YOLOv8 객체 탐지 모듈
-│   ├── violation.py        # 위반 판정 로직 (헬멧/2인 탑승)
-│   └── logger.py           # 위반 로그 CSV 저장 모듈
+│   ├── detector.py             # YOLOv8 객체 탐지 모듈
+│   ├── violation.py            # 위반 판정 로직 (헬멧/2인 탑승)
+│   └── logger.py               # 위반 로그 CSV 저장 모듈
 ├── dashboard/
 │   ├── templates/
-│   │   └── index.html      # 대시보드 메인 페이지
+│   │   └── index.html          # 대시보드 메인 페이지
 │   └── static/
-│       ├── style.css       # 스타일시트
-│       └── chart.js        # Chart.js 차트 연동 스크립트
-└── model/
-    └── best.pt             # YOLOv8 학습된 가중치 파일
+│       ├── style.css           # 스타일시트
+│       └── chart.js            # Chart.js 차트 연동 스크립트
+├── model/
+│   ├── dataset/
+│   │   ├── images/             # 학습 이미지
+│   │   └── labels/             # 라벨 파일
+│   ├── weights/
+│   │   └── best.pt             # YOLOv8 학습된 가중치 파일
+│   ├── data.yaml               # 데이터셋 설정
+│   ├── train.py                # 모델 학습 스크립트
+│   └── evaluate.py             # 모델 평가 스크립트
+└── docs/
+    ├── dashboard_manual.md     # 대시보드 모듈 명세서
+    └── model_manual.md         # 모델 모듈 명세서
 ```
 
 ---
