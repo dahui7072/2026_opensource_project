@@ -32,11 +32,15 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
+current_avg_conf = 0.0
+
 if not cap.isOpened():
     print("카메라 열기 실패")
 
 
 def generate_frames():
+
+    global current_avg_conf
 
     while True:
 
@@ -50,7 +54,7 @@ def generate_frames():
         frame = cv2.resize(frame, (640, 480))
 
         # 1. 객체 탐지
-        detections = detect(frame)
+        detections, avg_conf = detect(frame)
 
         # 2. 위반 판정
         result = check_violation(detections)
@@ -152,26 +156,18 @@ def video_feed():
 
 @app.route('/data')
 def data():
-
     violations = []
-
     try:
-
-        with open(
-            "data/violations.csv",
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            reader = csv.DictReader(f)
-
+        with open("data/violations.csv", "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f, fieldnames=['timestamp', 'violation_type'])
             for row in reader:
                 violations.append(row)
-
     except FileNotFoundError:
         pass
-
-    return jsonify(violations)
+    return jsonify({
+        "violations": violations,
+        "avg_confidence": round(current_avg_conf * 100, 1)  # 실시간 정확도 추가
+    })
 
 
 if __name__ == '__main__':

@@ -6,7 +6,10 @@ async function updateDashboard() {
     try {
         // 백엔드 CSV 변환 API 호출
         const res = await fetch('/data');
-        const data = await res.json();
+        const json = await res.json();
+
+        const data = json.violations;
+        const avgConf = json.avg_confidence;
 
         // 1. 위반 카운팅 변수 초기화
         let totalCount = data.length;
@@ -38,8 +41,9 @@ async function updateDashboard() {
         document.getElementById('statTotalCount').innerText = totalCount;
         document.getElementById('statHelmetCount').innerText = helmetCount;
         document.getElementById('statTwoPersonCount').innerText = twoPersonCount;
+        document.getElementById('statAccuracy').innerText = avgConf + "%";
 
-        // 3. 실시간 테이블 로그 출력 가공 (최신 로그 30개 제한 출력)
+        // 3. 실시간 테이블 로`그 출력 가공 (최신 로그 30개 제한 출력)
         const tableBody = document.getElementById('logTableBody');
         if (tableBody) {
             tableBody.innerHTML = '';

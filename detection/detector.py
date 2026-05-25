@@ -4,8 +4,9 @@ import cv2
 model = YOLO("model/weights/best.pt")
 
 def detect(frame):
-    results = model(frame, conf=0.25, verbose=False)  # verbose=False 추가로 터미널 출력 없앰
+    results = model(frame, conf=0.5, verbose=False)  # 0.25 → 0.5로 올림
     detections = []
+    confidences = []  # confidence 평균 계산용
 
     for box in results[0].boxes:
         cls = int(box.cls)
@@ -18,38 +19,9 @@ def detect(frame):
             "bbox": [x1, y1, x2, y2],
             "confidence": conf
         })
+        confidences.append(conf)
 
-    return detections
+    # confidence 평균값 계산해서 같이 반환
+    avg_confidence = round(sum(confidences) / len(confidences), 4) if confidences else 0.0
 
-if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        detections = detect(frame)
-
-        for d in detections:
-            x1, y1, x2, y2 = d["bbox"]
-            label = d["class"]
-            conf = d["confidence"]
-
-            if label == "person":
-                color = (0, 255, 0)
-            elif label == "helmet":
-                color = (255, 200, 0)
-            else:
-                color = (255, 100, 0)
-
-            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-            cv2.putText(frame, f"{label} {conf:.0%}", (x1, y1-10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-
-        cv2.imshow("킥보드 단속 감지", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+    return detections, avg_confidence
