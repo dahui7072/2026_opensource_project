@@ -1,4 +1,7 @@
 from flask import Flask, Response, render_template, jsonify
+from PIL import ImageFont, ImageDraw, Image
+import numpy as np
+import platform
 
 import cv2
 import csv
@@ -38,6 +41,25 @@ if not cap.isOpened():
     print("카메라 열기 실패")
 
 
+def get_font(size=36):
+    system = platform.system()
+    try:
+        if system == "Darwin":  # Mac
+            return ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", size)
+        elif system == "Windows":
+            return ImageFont.truetype("C:/Windows/Fonts/malgun.ttf", size)
+        else:  # Linux
+            return ImageFont.truetype("/usr/share/fonts/truetype/nanum/NanumGothic.ttf", size)
+    except:
+        return ImageFont.load_default()
+
+def draw_korean_text(frame, text, pos, color):
+    img_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(img_pil)
+    font = get_font(36)
+    draw.text(pos, text, font=font, fill=color)
+    return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+
 def generate_frames():
 
     global current_avg_conf
@@ -55,6 +77,7 @@ def generate_frames():
 
         # 1. 객체 탐지
         detections, avg_conf = detect(frame)
+        current_avg_conf = avg_conf  # 실시간 정확도 업데이트
 
         # 2. 위반 판정
         result = check_violation(detections)
@@ -69,27 +92,11 @@ def generate_frames():
         # 4. 경고 문구 표시
         if result == "two_person":
 
-            cv2.putText(
-                frame,
-                "WARNING: Two Persons",
-                (30, 50),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1.2,
-                (0, 0, 255),
-                3
-            )
+            frame = draw_korean_text(frame, "※ 2인 탑승 감지", (30, 50), (255, 50, 50))
 
         elif result == "no_helmet":
 
-            cv2.putText(
-                frame,
-                "WARNING: No Helmet",
-                (30, 50),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1.2,
-                (0, 165, 255),
-                3
-            )
+            frame = draw_korean_text(frame, "※ 헬멧 미착용 감지", (30, 50), (255, 140, 0))
 
         # 5. bbox 표시
         for d in detections:
