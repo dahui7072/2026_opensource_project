@@ -155,4 +155,4 @@ venv/
 *.onnx
 
 .vscode/
-.idea/
+.idea/yolov8 dataset.ipynb
