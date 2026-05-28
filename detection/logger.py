@@ -45,12 +45,14 @@ def log_violation(violation_type: str):
     global last_saved_time
 
     current_time = time.time()
+    elapsed = current_time - last_saved_time
 
-    # 같은 위반 상태 + 3초 이내면 저장 안 함
-    if (
-        current_violation == violation_type
-        and current_time - last_saved_time < 3
-    ):
+    # 같은 위반 유형이 3초 이내에 이미 기록됐으면 스킵
+    if current_violation == violation_type and elapsed < 3:
+        return
+
+    # 다른 유형이더라도 1초 이내 연속 기록은 스킵 (유형 전환 노이즈 방지)
+    if elapsed < 1:
         return
 
     timestamp = datetime.now().strftime(
@@ -79,4 +81,6 @@ def reset_violation():
 
     global current_violation
 
+    # last_saved_time은 건드리지 않음
+    # → 위반 해제 직후 재감지돼도 쿨다운이 유지됨
     current_violation = None
