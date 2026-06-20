@@ -1,5 +1,7 @@
 from flask import Flask, Response, render_template, jsonify
 from PIL import ImageFont, ImageDraw, Image
+from collections import deque
+from datetime import datetime
 import numpy as np
 import platform
 
@@ -30,10 +32,9 @@ app = Flask(
 init_logger()
 
 USE_WEBCAM = False  # 웹캠 사용 여부 (True: 웹캠, False: 영상 파일)
-VIDEO_PATH = os.path.join(os.path.dirname(__file__), "test_video3.mov")  # 스크립트 위치 기준 경로
-DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "violations.csv")  # /data 라우트용 경로
+VIDEO_PATH = os.path.join(os.path.dirname(__file__), "test_video3.mov")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "violations.csv")
 
-# 웹캠/영상 연결
 cap = cv2.VideoCapture(0 if USE_WEBCAM else VIDEO_PATH)
 
 if USE_WEBCAM:
@@ -43,6 +44,7 @@ if USE_WEBCAM:
 video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
 
 current_avg_conf = 0.0
+recent_confidences = deque(maxlen=30)  # 최근 30프레임 평균용
 
 if not cap.isOpened():
     print("웹캠 열기 실패" if USE_WEBCAM else f"영상 파일을 찾을 수 없음: {VIDEO_PATH}")
@@ -73,20 +75,26 @@ def generate_frames():
 
     while True:
 
-        # 프레임 읽기
         ret, frame = cap.read()
 
         if not ret:
             if not USE_WEBCAM:
-                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # 영상 끝나면 처음으로
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             continue
 
-        # 프레임 크기 고정
         frame = cv2.resize(frame, (640, 480))
 
         # 1. 객체 탐지
         detections, avg_conf = detect(frame)
-        current_avg_conf = avg_conf  # 실시간 정확도 업데이트
+
+        if avg_conf > 0:
+            recent_confidences.append(avg_conf)
+
+        current_avg_conf = (
+            sum(recent_confidences) / len(recent_confidences)
+            if recent_confidences else 0.0
+        )
+
         print([d["class"] for d in detections])
 
         # 2. 위반 판정
@@ -95,61 +103,40 @@ def generate_frames():
         # 3. 로그 저장
         if result != "normal":
             log_violation(result)
-
         else:
             reset_violation()
 
         # 4. 경고 문구 표시
         if result == "two_person":
-
             frame = draw_korean_text(frame, "※ 2인 탑승 감지", (30, 50), (255, 50, 50))
-
         elif result == "no_helmet":
-
             frame = draw_korean_text(frame, "※ 헬멧 미착용 감지", (30, 50), (255, 140, 0))
 
         # 5. bbox 표시
         for d in detections:
-
             x1, y1, x2, y2 = d["bbox"]
-
             label = d["class"]
             conf = d["confidence"]
 
             if label == "person":
                 color = (0, 255, 0)
-
             elif label == "helmet":
                 color = (255, 200, 0)
-
             else:
                 color = (255, 100, 0)
 
-            cv2.rectangle(
-                frame,
-                (x1, y1),
-                (x2, y2),
-                color,
-                2
-            )
-
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
             cv2.putText(
-                frame,
-                f"{label} {conf:.0%}",
-                (x1, y1 - 10),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                color,
-                2
+                frame, f"{label} {conf:.0%}", (x1, y1 - 10),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2
             )
 
         # 6. 영상 스트리밍
         _, buffer = cv2.imencode('.jpg', frame)
-
         frame_bytes = buffer.tobytes()
 
         if not USE_WEBCAM:
-            time.sleep(1 / video_fps)  # 원본 영상 속도 맞추기
+            time.sleep(1 / video_fps)
 
         yield (
             b'--frame\r\n'
@@ -161,13 +148,11 @@ def generate_frames():
 
 @app.route('/')
 def index():
-
     return render_template('index.html')
 
 
 @app.route('/video_feed')
 def video_feed():
-
     return Response(
         generate_frames(),
         mimetype='multipart/x-mixed-replace; boundary=frame'
@@ -177,19 +162,22 @@ def video_feed():
 @app.route('/data')
 def data():
     violations = []
+    today = datetime.now().strftime("%Y-%m-%d")
+
     try:
         with open(DATA_PATH, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                violations.append(row)
+                if row["timestamp"].startswith(today):
+                    violations.append(row)
     except FileNotFoundError:
         pass
+
     return jsonify({
         "violations": violations,
-        "avg_confidence": round(current_avg_conf * 100, 1)  # 실시간 정확도 추가
+        "avg_confidence": round(current_avg_conf * 100, 1)
     })
 
 
 if __name__ == '__main__':
-
-    app.run(debug=False)
+    app.run(debug=False, port=5001)
