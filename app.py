@@ -7,6 +7,7 @@ import cv2
 import csv
 import sys
 import os
+import time
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -28,17 +29,23 @@ app = Flask(
 # logger 초기화
 init_logger()
 
-# 웹캠 연결
-cap = cv2.VideoCapture(0)
+USE_WEBCAM = False  # 웹캠 사용 여부 (True: 웹캠, False: 영상 파일)
+VIDEO_PATH = os.path.join(os.path.dirname(__file__), "test_video3.mov")  # 스크립트 위치 기준 경로
+DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "violations.csv")  # /data 라우트용 경로
 
-# 카메라 해상도 설정
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+# 웹캠/영상 연결
+cap = cv2.VideoCapture(0 if USE_WEBCAM else VIDEO_PATH)
+
+if USE_WEBCAM:
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
 
 current_avg_conf = 0.0
 
 if not cap.isOpened():
-    print("카메라 열기 실패")
+    print("웹캠 열기 실패" if USE_WEBCAM else f"영상 파일을 찾을 수 없음: {VIDEO_PATH}")
 
 
 def get_font(size=36):
@@ -70,6 +77,8 @@ def generate_frames():
         ret, frame = cap.read()
 
         if not ret:
+            if not USE_WEBCAM:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # 영상 끝나면 처음으로
             continue
 
         # 프레임 크기 고정
@@ -78,6 +87,7 @@ def generate_frames():
         # 1. 객체 탐지
         detections, avg_conf = detect(frame)
         current_avg_conf = avg_conf  # 실시간 정확도 업데이트
+        print([d["class"] for d in detections])
 
         # 2. 위반 판정
         result = check_violation(detections)
@@ -138,6 +148,9 @@ def generate_frames():
 
         frame_bytes = buffer.tobytes()
 
+        if not USE_WEBCAM:
+            time.sleep(1 / video_fps)  # 원본 영상 속도 맞추기
+
         yield (
             b'--frame\r\n'
             b'Content-Type: image/jpeg\r\n\r\n'
@@ -165,8 +178,8 @@ def video_feed():
 def data():
     violations = []
     try:
-        with open("data/violations.csv", "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f, fieldnames=['timestamp', 'violation_type'])
+        with open(DATA_PATH, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
             for row in reader:
                 violations.append(row)
     except FileNotFoundError:
