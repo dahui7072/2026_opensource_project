@@ -78,19 +78,7 @@ names: ['helmet', 'person', 'kickboard']
 
 ---
 
-## 6. 모델 성능 지표
-
-| 지표 | 값 |
-|------|----|
-| mAP@50 | 91.2% |
-| Precision | - |
-| Recall | - |
-
-> 학습 완료 후 실제 수치로 업데이트 필요
-
----
-
-## 7. 가중치 파일 위치
+## 6. 가중치 파일 위치
 
 ```
 model/weights/best.pt
