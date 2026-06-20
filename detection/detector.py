@@ -4,7 +4,7 @@ import cv2
 model = YOLO("model/weights/best.pt")
 
 def detect(frame):
-    results = model(frame, conf=0.5, verbose=False)  # 0.25 → 0.5로 올림
+    results = model(frame, conf=0.25, iou=0.7, agnostic_nms=True, verbose=False)
     detections = []
     confidences = []  # confidence 평균 계산용
 
@@ -25,3 +25,4 @@ def detect(frame):
     avg_confidence = round(sum(confidences) / len(confidences), 4) if confidences else 0.0
 
     return detections, avg_confidence
+
