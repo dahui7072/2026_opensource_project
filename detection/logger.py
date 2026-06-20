@@ -16,23 +16,19 @@ last_saved_time = 0
 
 
 def init_logger():
-
     os.makedirs(
         os.path.dirname(LOG_PATH),
         exist_ok=True
     )
 
     if not os.path.exists(LOG_PATH):
-
         with open(
             LOG_PATH,
             "w",
             newline="",
             encoding="utf-8"
         ) as f:
-
             writer = csv.writer(f)
-
             writer.writerow([
                 "timestamp",
                 "violation_type"
@@ -40,19 +36,11 @@ def init_logger():
 
 
 def log_violation(violation_type: str):
-
     global current_violation
     global last_saved_time
 
-    current_time = time.time()
-    elapsed = current_time - last_saved_time
-
-    # 같은 위반 유형이 3초 이내에 이미 기록됐으면 스킵
-    if current_violation == violation_type and elapsed < 3:
-        return
-
-    # 다른 유형이더라도 1초 이내 연속 기록은 스킵 (유형 전환 노이즈 방지)
-    if elapsed < 1:
+    # 이미 같은 위반이 진행 중이면 새로 기록하지 않음 (위반 시작 시점에만 1번 기록)
+    if current_violation == violation_type:
         return
 
     timestamp = datetime.now().strftime(
@@ -65,22 +53,17 @@ def log_violation(violation_type: str):
         newline="",
         encoding="utf-8"
     ) as f:
-
         writer = csv.writer(f)
-
         writer.writerow([
             timestamp,
             violation_type
         ])
 
     current_violation = violation_type
-    last_saved_time = current_time
+    last_saved_time = time.time()
 
 
 def reset_violation():
-
     global current_violation
-
-    # last_saved_time은 건드리지 않음
-    # → 위반 해제 직후 재감지돼도 쿨다운이 유지됨
+    # 위반 상태가 풀리면 초기화 → 다음에 다시 위반 시작되면 새로 기록됨
     current_violation = None
