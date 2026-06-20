@@ -2,6 +2,7 @@ from collections import deque
 
 recent_detections = deque(maxlen=30)
 
+
 def is_overlapping(box1, box2):
     x1 = max(box1[0], box2[0])
     y1 = max(box1[1], box2[1])
@@ -9,12 +10,6 @@ def is_overlapping(box1, box2):
     y2 = min(box1[3], box2[3])
     return x1 < x2 and y1 < y2
 
-def is_near(box1, box2, margin=150):
-    x1 = max(box1[0], box2[0]) - margin
-    y1 = max(box1[1], box2[1]) - margin
-    x2 = min(box1[2], box2[2]) + margin
-    y2 = min(box1[3], box2[3]) + margin
-    return x1 < x2 and y1 < y2
 
 def check_violation(detections):
     kickboards = [d for d in detections if d["class"] == "kickboard"]
@@ -23,31 +18,51 @@ def check_violation(detections):
 
     print(f"kb:{len(kickboards)} person:{len(persons)} helmet:{len(helmets)}")
 
-    # 현재 프레임 클래스 list로 저장 (person 개수 파악 위해 list 사용)
-    detected_classes = [d["class"] for d in detections]
-    recent_detections.append(detected_classes)
+    frame_has_rider  = False
+    frame_two_person = False
+    frame_no_helmet  = False
 
-    # 최근 30프레임 누적
-    accumulated = set()
-    for frame_classes in recent_detections:
-        accumulated |= set(frame_classes)
+    # 킥보드 한 대씩 따로 검사
+    for kb in kickboards:
+        # 이 킥보드 bbox랑 실제로 겹치는 사람만 "이 킥보드 탑승자"
+        riders = [p for p in persons if is_overlapping(kb["bbox"], p["bbox"])]
 
-    has_kb     = "kickboard" in accumulated
-    has_helmet = "helmet" in accumulated
+        if not riders:
+            continue  # 사람이 안 탄(주차된) 킥보드는 무시
 
-    if not has_kb:
+        frame_has_rider = True
+
+        if len(riders) >= 2:
+            frame_two_person = True
+
+        # 탑승자 몸통이랑 겹치는 헬멧이 있는지 확인
+        has_helmet = any(
+            is_overlapping(p["bbox"], h["bbox"])
+            for p in riders
+            for h in helmets
+        )
+        if not has_helmet:
+            frame_no_helmet = True
+
+    recent_detections.append({
+        "has_rider": frame_has_rider,
+        "two_person": frame_two_person,
+        "no_helmet": frame_no_helmet,
+    })
+
+    THRESHOLD = 15  # 최근 30프레임 중 절반 이상 지속돼야 위반으로 판단
+
+    rider_count      = sum(1 for f in recent_detections if f["has_rider"])
+    two_person_count = sum(1 for f in recent_detections if f["two_person"])
+    no_helmet_count  = sum(1 for f in recent_detections if f["no_helmet"])
+
+    if rider_count < THRESHOLD:
         return "normal"
 
-    # 2인 탑승: 30프레임 중 10번 이상 person:2 나왔을 때만 판정
-    two_person_count = sum(
-        1 for frame_classes in recent_detections
-        if frame_classes.count("person") >= 2
-    )
-    if two_person_count >= 10:
+    if two_person_count >= THRESHOLD:
         return "two_person"
 
-    # 헬멧 미착용: 30프레임 누적 기준
-    if not has_helmet:
+    if no_helmet_count >= THRESHOLD:
         return "no_helmet"
 
     return "normal"
