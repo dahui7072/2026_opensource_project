@@ -32,10 +32,18 @@ app = Flask(
 init_logger()
 
 USE_WEBCAM = False  # 웹캠 사용 여부 (True: 웹캠, False: 영상 파일)
-VIDEO_PATH = os.path.join(os.path.dirname(__file__), "test_video3.mov")
+
+# 순서대로 재생할 영상 목록 (끝까지 재생되면 다시 첫 번째로 순환)
+VIDEO_PATHS = [
+    os.path.join(os.path.dirname(__file__), "test_video1.mov"),
+    os.path.join(os.path.dirname(__file__), "test_video2.mov"),
+    os.path.join(os.path.dirname(__file__), "test_video3.mov"),
+]
+current_video_index = 0
+
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "violations.csv")
 
-cap = cv2.VideoCapture(0 if USE_WEBCAM else VIDEO_PATH)
+cap = cv2.VideoCapture(0 if USE_WEBCAM else VIDEO_PATHS[current_video_index])
 
 if USE_WEBCAM:
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -47,7 +55,7 @@ current_avg_conf = 0.0
 recent_confidences = deque(maxlen=30)  # 최근 30프레임 평균용
 
 if not cap.isOpened():
-    print("웹캠 열기 실패" if USE_WEBCAM else f"영상 파일을 찾을 수 없음: {VIDEO_PATH}")
+    print("웹캠 열기 실패" if USE_WEBCAM else f"영상 파일을 찾을 수 없음: {VIDEO_PATHS[current_video_index]}")
 
 
 def get_font(size=36):
@@ -71,7 +79,7 @@ def draw_korean_text(frame, text, pos, color):
 
 def generate_frames():
 
-    global current_avg_conf
+    global current_avg_conf, cap, current_video_index, video_fps
 
     while True:
 
@@ -79,7 +87,11 @@ def generate_frames():
 
         if not ret:
             if not USE_WEBCAM:
-                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                # 현재 영상이 끝났으면 다음 영상으로 전환 (마지막이면 다시 처음으로)
+                current_video_index = (current_video_index + 1) % len(VIDEO_PATHS)
+                cap.release()
+                cap = cv2.VideoCapture(VIDEO_PATHS[current_video_index])
+                video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
             continue
 
         frame = cv2.resize(frame, (640, 480))
