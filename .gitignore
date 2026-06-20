@@ -156,3 +156,4 @@ venv/
 
 .vscode/
 .idea/yolov8 dataset.ipynb
+data/violations.csv
