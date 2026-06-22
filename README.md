@@ -82,7 +82,7 @@ python app.py
 ### 3. 대시보드 접속
 브라우저에서 `http://127.0.0.1:5001` 접속
 
-> 기본은 영상 파일(`test_video1.mov`)로 동작합니다. 웹캠으로 돌리려면 `app.py`의 `USE_WEBCAM = True`로 변경하세요.
+> 기본은 `samples/` 폴더의 영상 및 이미지 파일을 순서대로 순환 재생합니다. 웹캠으로 돌리려면 `app.py`의 `USE_WEBCAM = True`로 변경하세요.
 
 ---
 

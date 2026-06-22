@@ -14,7 +14,7 @@ python app.py
 
 브라우저에서 `http://127.0.0.1:5001` 접속
 
-> `app.py`의 `USE_WEBCAM` 값으로 웹캠/영상 파일 입력을 전환합니다. `True`면 웹캠, `False`면 `VIDEO_PATH`에 지정된 영상 파일을 사용합니다.
+> `app.py`의 `USE_WEBCAM` 값으로 웹캠/파일 입력을 전환합니다. `True`면 웹캠, `False`면 `MEDIA_PATHS`에 지정된 영상 및 이미지 파일 목록을 순서대로 순환 재생합니다.
 
 ---
 
@@ -56,6 +56,7 @@ Flask 서버 메인 파일. 라우트 정의 및 영상 스트리밍 처리.
 - `generate_frames()`: 웹캠 또는 영상 파일에서 프레임을 읽어 탐지 → 위반 판정 → 로그 저장 → 화면 오버레이 순으로 처리 후 MJPEG 스트림으로 전송
 - 최근 30프레임의 confidence를 누적해 평균값(`current_avg_conf`)을 계산
 - `/data` 라우트: `data/violations.csv`에서 오늘 날짜 기록만 읽어 JSON으로 반환
+- 영상 파일과 이미지 파일을 혼합한 재생 목록(`MEDIA_PATHS`)을 순환 재생하며, 이미지는 지정된 시간(`IMAGE_DISPLAY_DURATION`) 동안 표시 후 다음 파일로 전환
 
 ### detection/detector.py
 YOLOv8 모델(`best.pt`)로 프레임에서 객체(`helmet`, `person`, `kickboard`)를 탐지하고, bbox와 confidence를 반환합니다.
