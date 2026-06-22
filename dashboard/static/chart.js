@@ -1,6 +1,16 @@
 let hourlyChartInstance = null;
 let ratioChartInstance = null;
 
+<<<<<<< HEAD
+=======
+function updateLiveClock() {
+    const el = document.getElementById('liveClock');
+    if (el) {
+        el.innerText = new Date().toLocaleTimeString('ko-KR');
+    }
+}
+
+>>>>>>> 815980a (fix: ui 실시간 추가)
 async function updateDashboard() {
     try {
         const res = await fetch('/data');
@@ -127,4 +137,11 @@ async function updateDashboard() {
 }
 
 updateDashboard();
+<<<<<<< HEAD
 setInterval(updateDashboard, 5000);
+=======
+setInterval(updateDashboard, 5000);
+
+updateLiveClock();
+setInterval(updateLiveClock, 1000);
+>>>>>>> 815980a (fix: ui 실시간 추가)

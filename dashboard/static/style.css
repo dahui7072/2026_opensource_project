@@ -95,6 +95,16 @@ body {
     animation: blink 1.5s infinite;
 }
 
+<<<<<<< HEAD
+=======
+.live-clock {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+>>>>>>> 815980a (fix: ui 실시간 추가)
 @keyframes blink {
     0% { opacity: 1; }
     50% { opacity: 0.4; }
