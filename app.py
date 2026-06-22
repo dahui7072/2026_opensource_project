@@ -31,31 +31,50 @@ app = Flask(
 # logger 초기화
 init_logger()
 
-USE_WEBCAM = False  # 웹캠 사용 여부 (True: 웹캠, False: 영상 파일)
+USE_WEBCAM = False  # 웹캠 사용 여부 (True: 웹캠, False: 파일 재생)
 
-# 순서대로 재생할 영상 목록 (끝까지 재생되면 다시 첫 번째로 순환)
-VIDEO_PATHS = [
-    os.path.join(os.path.dirname(__file__), "test_video1.mov"),
-    os.path.join(os.path.dirname(__file__), "test_video2.mov"),
-    os.path.join(os.path.dirname(__file__), "test_video3.mov"),
+# [수정] 원래 있던 영상 3개를 모두 포함하고, 이미지 파일도 함께 배치했습니다.
+MEDIA_PATHS = [
+    os.path.join(os.path.dirname(__file__), "samples","test_video1.mov"),
+    os.path.join(os.path.dirname(__file__), "samples","2people.jpg"),   
+    os.path.join(os.path.dirname(__file__), "samples","test_video2.mov"),
+    os.path.join(os.path.dirname(__file__), "samples","2people_2.jpg"),   
+    os.path.join(os.path.dirname(__file__), "samples","test_video3.mov"),
+    os.path.join(os.path.dirname(__file__), "samples","2people_3.jpg"),
+    os.path.join(os.path.dirname(__file__), "samples","test2.jpg"),   
 ]
-current_video_index = 0
+current_media_index = 0
+
+# 이미지가 화면에 머무를 시간 (초 단위)
+IMAGE_DISPLAY_DURATION = 4.0 
+# 이미지 재생 시 가상 프레임 수 (FPS)
+IMAGE_FPS = 30 
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "violations.csv")
 
-cap = cv2.VideoCapture(0 if USE_WEBCAM else VIDEO_PATHS[current_video_index])
+# 초기 설정
+current_path = MEDIA_PATHS[current_media_index]
+is_image = current_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))
 
 if USE_WEBCAM:
+    cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
-video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
+    video_fps = 30
+else:
+    if is_image:
+        cap = None
+        video_fps = IMAGE_FPS
+        image_start_time = time.time()
+    else:
+        cap = cv2.VideoCapture(current_path)
+        video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
 
 current_avg_conf = 0.0
 recent_confidences = deque(maxlen=30)  # 최근 30프레임 평균용
 
-if not cap.isOpened():
-    print("웹캠 열기 실패" if USE_WEBCAM else f"영상 파일을 찾을 수 없음: {VIDEO_PATHS[current_video_index]}")
+if not USE_WEBCAM and cap and not cap.isOpened():
+    print(f"영상 파일을 찾을 수 없음: {MEDIA_PATHS[current_media_index]}")
 
 
 def get_font(size=36):
@@ -77,22 +96,66 @@ def draw_korean_text(frame, text, pos, color):
     draw.text(pos, text, font=font, fill=color)
     return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
-def generate_frames():
 
-    global current_avg_conf, cap, current_video_index, video_fps
+def generate_frames():
+    global current_avg_conf, cap, current_media_index, video_fps
+
+    # 이미지 처리를 위한 변수 내부 참조용
+    image_start_time = time.time()
 
     while True:
+        current_path = MEDIA_PATHS[current_media_index]
+        is_current_image = current_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))
 
-        ret, frame = cap.read()
+        if USE_WEBCAM:
+            ret, frame = cap.read()
+            if not ret:
+                continue
+        else:
+            if is_current_image:
+                # 1. 이미지 파일 처리 (설정한 시간 동안 루프 돌며 모델 통과)
+                if time.time() - image_start_time > IMAGE_DISPLAY_DURATION:
+                    current_media_index = (current_media_index + 1) % len(MEDIA_PATHS)
+                    next_path = MEDIA_PATHS[current_media_index]
+                    
+                    if next_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                        video_fps = IMAGE_FPS
+                        image_start_time = time.time()
+                    else:
+                        if cap is not None: cap.release()
+                        cap = cv2.VideoCapture(next_path)
+                        video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
+                    continue
+                
+                frame = cv2.imread(current_path)
+                if frame is None:
+                    print(f"이미지 로드 실패: {current_path}")
+                    current_media_index = (current_media_index + 1) % len(MEDIA_PATHS)
+                    continue
+            else:
+                # 2. 동영상 파일 처리
+                if cap is None or not cap.isOpened():
+                    cap = cv2.VideoCapture(current_path)
+                    video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
 
-        if not ret:
-            if not USE_WEBCAM:
-                # 현재 영상이 끝났으면 다음 영상으로 전환 (마지막이면 다시 처음으로)
-                current_video_index = (current_video_index + 1) % len(VIDEO_PATHS)
-                cap.release()
-                cap = cv2.VideoCapture(VIDEO_PATHS[current_video_index])
-                video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
-            continue
+                ret, frame = cap.read()
+
+                if not ret:
+                    # 현재 영상이 끝나면 다음 미디어로 순환 전환
+                    current_media_index = (current_media_index + 1) % len(MEDIA_PATHS)
+                    next_path = MEDIA_PATHS[current_media_index]
+                    
+                    if cap is not None: 
+                        cap.release()
+                        cap = None
+
+                    if next_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                        video_fps = IMAGE_FPS
+                        image_start_time = time.time()
+                    else:
+                        cap = cv2.VideoCapture(next_path)
+                        video_fps = cap.get(cv2.CAP_PROP_FPS) or 30
+                    continue
 
         frame = cv2.resize(frame, (640, 480))
 
@@ -135,7 +198,7 @@ def generate_frames():
             elif label == "helmet":
                 color = (255, 200, 0)
             else:
-                color = (255, 100, 0)
+                color = (0, 0, 255)
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
             cv2.putText(
