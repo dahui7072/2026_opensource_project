@@ -34,12 +34,16 @@
 ├── requirements.txt
 ├── .gitignore
 ├── yolov8_dataset_ipynb의_수정본.ipynb   # 데이터셋 구성 노트북
-├── test_video1.mov             # 시연용 테스트 영상
-├── test_video2.mov
-├── test_video3.mov
-├── test_image.py               # 이미지 단건 감지 테스트 스크립트
-├── test.jpeg                   # 감지 테스트용 이미지
-├── IMG_1800.JPG                # 감지 테스트용 이미지
+├── samples/                    # 시연 및 테스트용 미디어 리소스 폴더
+│   ├── test_video1.mov         # 시연용 테스트 영상 1
+│   ├── test_video2.mov         # 시연용 테스트 영상 2
+│   ├── test_video3.mov         # 시연용 테스트 영상 3
+│   ├── test_image.py           # 이미지 단건 감지 테스트 스크립트
+│   ├── 2people.jpg             # 감지 테스트용 이미지 1
+│   ├── 2people_2.jpg           # 감지 테스트용 이미지 2
+│   ├── 2people_3.jpg           # 감지 테스트용 이미지 3
+│   ├── test.jpeg               # 감지 테스트용 이미지 4
+│   └── test2.jpg               # 감지 테스트용 이미지 5
 ├── data/
 │   └── violations.csv          # 위반 기록 누적 저장 (git 추적 제외)
 ├── detection/
@@ -57,8 +61,8 @@
 │       ├── best.pt             # 실제 서비스에 사용 중인 학습 가중치
 │       └── best_helmet.pt      # 헬멧 단독 학습 실험용 가중치
 └── docs/
-    ├── dashboard_manual.md     # 대시보드 모듈 명세서
-    └── model_manual.md         # 모델 모듈 명세서
+├── dashboard_manual.md     # 대시보드 모듈 명세서
+└── model_manual.md         # 모델 모듈 명세서
 ```
 
 ---
