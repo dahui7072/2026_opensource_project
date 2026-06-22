@@ -38,7 +38,7 @@
 │   ├── test_video1.mov         # 시연용 테스트 영상 1
 │   ├── test_video2.mov         # 시연용 테스트 영상 2
 │   ├── test_video3.mov         # 시연용 테스트 영상 3
-│   ├── test_image.py           # 이미지 단건 감지 테스트 스크립트
+│   ├── test_image.py           # 이미지로 감지 정확도 확인을 위한 파이썬 파일
 │   ├── 2people.jpg             # 감지 테스트용 이미지 1
 │   ├── 2people_2.jpg           # 감지 테스트용 이미지 2
 │   ├── 2people_3.jpg           # 감지 테스트용 이미지 3
